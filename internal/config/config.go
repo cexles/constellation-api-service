@@ -36,7 +36,8 @@ type Api struct {
 }
 
 type Jwt struct {
-	SecretKey string `json:"secretKey"`
+	SecretKey  string `json:"secretKey"`
+	Expiration int    `json:"expiration"`
 }
 
 type Postgres struct {

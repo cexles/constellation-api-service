@@ -5,7 +5,9 @@ go 1.21
 require (
 	github.com/ethereum/go-ethereum v1.13.5
 	github.com/goccy/go-json v0.10.2
+	github.com/gofiber/contrib/jwt v1.0.7
 	github.com/gofiber/fiber/v2 v2.51.0
+	github.com/golang-jwt/jwt/v5 v5.1.0
 	github.com/jackc/pgx/v5 v5.5.0
 	github.com/rs/zerolog v1.31.0
 )
@@ -21,8 +23,6 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/ethereum/c-kzg-4844 v0.4.0 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
-	github.com/gofiber/contrib/jwt v1.0.7 // indirect
-	github.com/golang-jwt/jwt/v5 v5.1.0 // indirect
 	github.com/google/uuid v1.4.0 // indirect
 	github.com/holiman/uint256 v1.2.3 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -43,5 +43,6 @@ require (
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.14.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
 )

@@ -32,12 +32,12 @@ func main() {
 
 	pgCfg, err := config.NewPgConfig(cfg.Pg)
 	if err != nil {
-		log.Panic().Err(err).Msg("pg cfg")
+		log.Panic().Msgf("Couldn't parse PG config \n $v", err)
 	}
 
 	pg, err := initPg(ctx, pgCfg)
 	if err != nil {
-		log.Panic().Err(err).Msg("pg")
+		log.Panic().Msgf("PG connection error \n $v", err)
 	}
 
 	defer func() {
@@ -47,7 +47,7 @@ func main() {
 	}()
 
 	userRepo := repository.NewUser(pg)
-	authService := service.NewAuth(userRepo)
+	authService := service.NewAuth(userRepo, *cfg.Jwt)
 	authHandler := handler.NewApi(authService)
 	app := api.NewFiber(ctx, cfg.Jwt, authHandler)
 
@@ -98,7 +98,7 @@ func initPg(ctx context.Context, cfg *pgxpool.Config) (*pgxpool.Pool, error) {
 		log.Error().Err(err).Fields(map[string]any{
 			"host": cfg.ConnConfig.Host,
 			"port": cfg.ConnConfig.Host,
-		}).Msg("pg ping error")
+		}).Msg("PG Ping error")
 		return nil, err
 	}
 	log.Info().Fields(map[string]any{
@@ -106,7 +106,7 @@ func initPg(ctx context.Context, cfg *pgxpool.Config) (*pgxpool.Pool, error) {
 		"port":   cfg.ConnConfig.Port,
 		"db":     cfg.ConnConfig.Database,
 		"rtt_ms": time.Since(t).Milliseconds(),
-	}).Msg("connected to postgres")
+	}).Msg("Connected to PG")
 
 	return pgPool, nil
 }

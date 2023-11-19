@@ -50,6 +50,7 @@ func NewFiber(ctx context.Context, jwtCfg *config.Jwt, authHandler *handler.Auth
 			Key: []byte(jwtCfg.SecretKey),
 		},
 	}))
+	authGroup.Post("/token", authHandler.RefreshToken)
 
 	return app
 }

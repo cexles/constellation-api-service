@@ -37,3 +37,19 @@ func (a *AuthApi) Login(c *fiber.Ctx) error {
 
 	return c.JSON(resp)
 }
+
+func (a *AuthApi) RefreshToken(c *fiber.Ctx) error {
+	var req request.RefreshRequest
+
+	err := c.BodyParser(&req)
+	if err != nil {
+		return fiber.NewError(http.StatusBadRequest, err.Error())
+	}
+
+	resp, err := a.authService.RefreshToken(c, req.Token)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(resp)
+}
