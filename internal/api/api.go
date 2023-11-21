@@ -18,7 +18,7 @@ type ErrorResponse struct {
 	Code  int    `json:"code"`
 }
 
-func NewFiber(ctx context.Context, jwtCfg *config.Jwt, authHandler *handler.AuthApi) *fiber.App {
+func NewFiber(ctx context.Context, jwtCfg *config.Jwt, authHandler *handler.AuthApi, userHandler *handler.UserApi) *fiber.App {
 	app := fiber.New(fiber.Config{
 		DisableStartupMessage: true,
 		JSONDecoder:           json.Unmarshal,
@@ -51,6 +51,9 @@ func NewFiber(ctx context.Context, jwtCfg *config.Jwt, authHandler *handler.Auth
 		},
 	}))
 	authGroup.Post("/token", authHandler.RefreshToken)
+
+	userGroup := api.Group("/user")
+	userGroup.Get("/balance", userHandler.Balance)
 
 	return app
 }

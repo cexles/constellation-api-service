@@ -1,0 +1,3 @@
+ALTER TABLE IF EXISTS tokens DROP CONSTRAINT IF EXISTS fk_tokens_chains;
+
+DROP TABLE IF EXISTS tokens;

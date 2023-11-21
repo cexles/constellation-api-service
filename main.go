@@ -8,13 +8,16 @@ import (
 	"api-service/internal/service"
 	"context"
 	"fmt"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/goccy/go-json"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
+	"math/big"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 )
@@ -46,10 +49,59 @@ func main() {
 
 	}()
 
+	ethClients := make(map[string]*ethclient.Client, len(cfg.Rpc))
+	mu := &sync.Mutex{}
+	for chain, r := range cfg.Rpc {
+		if !r.Enabled {
+			log.Info().Msgf("Chain disabled: %s", chain)
+			continue
+		}
+
+		go func(chain string, r *config.RPCDetails, mu *sync.Mutex) {
+			var client *ethclient.Client
+			var chainId *big.Int
+
+			for {
+				c, err := ethclient.DialContext(ctx, r.URL)
+				if err == nil {
+					chainId, err = c.ChainID(ctx)
+				}
+				if err == nil {
+					client = c
+					log.Info().Fields(map[string]any{
+						"rpc":      r.URL,
+						"chain_id": chainId,
+					}).Msg("Connected to RPC")
+					break
+				}
+				log.Warn().Msgf("Error connecting: %s", r.URL)
+			}
+			mu.Lock()
+			ethClients[chain] = client
+			mu.Unlock()
+		}(chain, r, mu)
+	}
+
+	defer func() {
+		log.Info().Msg("Shutting down RPC clients")
+		for _, v := range ethClients {
+			v.Close()
+		}
+	}()
+
 	userRepo := repository.NewUser(pg)
+	chainRepo := repository.NewChain(pg)
+	tokenRepo := repository.NewToken(pg)
+
 	authService := service.NewAuth(userRepo, *cfg.Jwt)
-	authHandler := handler.NewApi(authService)
-	app := api.NewFiber(ctx, cfg.Jwt, authHandler)
+	chainService := service.NewChain(chainRepo, cfg.Rpc)
+	tokenSevice := service.NewToken(tokenRepo)
+	balanceService := service.NewBalance(ethClients, *chainService, *tokenSevice)
+
+	authHandler := handler.NewAuthApi(authService)
+	userHandler := handler.NewUserApi(chainService, balanceService)
+
+	app := api.NewFiber(ctx, cfg.Jwt, authHandler, userHandler)
 
 	go func() {
 		<-ctx.Done()

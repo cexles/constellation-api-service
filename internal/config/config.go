@@ -10,9 +10,10 @@ import (
 type Config struct {
 	App *App `json:"app"`
 
-	Api *Api      `json:"api"`
-	Jwt *Jwt      `json:"jwt"`
-	Pg  *Postgres `json:"postgres"`
+	Api *Api                   `json:"api"`
+	Jwt *Jwt                   `json:"jwt"`
+	Pg  *Postgres              `json:"postgres"`
+	Rpc map[string]*RPCDetails `json:"rpc"`
 }
 
 type App struct {
@@ -49,6 +50,11 @@ type Postgres struct {
 	Password string `json:"password"`
 	CertPath string `json:"certPath"`
 	MaxConns int32  `json:"maxConns"`
+}
+
+type RPCDetails struct {
+	Enabled bool   `json:"enabled"`
+	URL     string `json:"url"`
 }
 
 func New(configFileName string) (*Config, error) {

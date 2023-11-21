@@ -28,5 +28,15 @@
     "password": "",
     "certPath": "",
     "maxConns": 250
+  },
+  "rpc": {
+    "ethereum": {
+      "enabled": true,
+      "url": "https://rpc.ankr.com/eth"
+    },
+    "polygon": {
+      "enabled": true,
+      "url": "https://rpc.ankr.com/polygon"
+    }
   }
 }
