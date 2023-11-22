@@ -5,6 +5,7 @@ import (
 	"api-service/internal/service"
 	"github.com/gofiber/fiber/v2"
 	"math/big"
+	"net/http"
 )
 
 type UserApi struct {
@@ -24,12 +25,12 @@ func (a *UserApi) Balance(c *fiber.Ctx) error {
 
 	coinBalance, err := a.balanceService.CoinBalance(c.Context(), address)
 	if err != nil {
-		return err
+		return fiber.NewError(http.StatusInternalServerError, "Can't parse coin balance")
 	}
 
 	tokenBalance, err := a.balanceService.TokenBalance(c.Context(), address)
 	if err != nil {
-		return err
+		return fiber.NewError(http.StatusInternalServerError, "Can't parse token balance")
 	}
 
 	totalBalance := append(coinBalance, tokenBalance...)

@@ -22,10 +22,10 @@ type UserRepository interface {
 
 type Auth struct {
 	userRepo UserRepository
-	jwtCfg   config.Jwt
+	jwtCfg   *config.Jwt
 }
 
-func NewAuth(repo UserRepository, jwtCfg config.Jwt) *Auth {
+func NewAuth(repo UserRepository, jwtCfg *config.Jwt) *Auth {
 	return &Auth{
 		userRepo: repo,
 		jwtCfg:   jwtCfg,

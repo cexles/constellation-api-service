@@ -3,9 +3,7 @@ package repository
 import (
 	"api-service/internal/model"
 	"context"
-	"errors"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"math/big"
 )
@@ -63,9 +61,6 @@ func (r *Token) GetCoinByChainId(ctx context.Context, chainId *big.Int) (model.T
 	var t model.Token
 	var address string
 	if err := row.Scan(&address, &t.Name, &t.Symbol, &t.Decimals); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return model.Token{}, nil
-		}
 		return model.Token{}, err
 	}
 

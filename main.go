@@ -50,14 +50,18 @@ func main() {
 	}()
 
 	ethClients := make(map[string]*ethclient.Client, len(cfg.Rpc))
+
 	mu := &sync.Mutex{}
+	var wg sync.WaitGroup
 	for chain, r := range cfg.Rpc {
 		if !r.Enabled {
 			log.Info().Msgf("Chain disabled: %s", chain)
 			continue
 		}
 
-		go func(chain string, r *config.RPCDetails, mu *sync.Mutex) {
+		wg.Add(1)
+		go func(chain string, r *config.RPCDetails) {
+			defer wg.Done()
 			var client *ethclient.Client
 			var chainId *big.Int
 
@@ -79,8 +83,9 @@ func main() {
 			mu.Lock()
 			ethClients[chain] = client
 			mu.Unlock()
-		}(chain, r, mu)
+		}(chain, r)
 	}
+	wg.Wait()
 
 	defer func() {
 		log.Info().Msg("Shutting down RPC clients")
@@ -93,10 +98,10 @@ func main() {
 	chainRepo := repository.NewChain(pg)
 	tokenRepo := repository.NewToken(pg)
 
-	authService := service.NewAuth(userRepo, *cfg.Jwt)
+	authService := service.NewAuth(userRepo, cfg.Jwt)
 	chainService := service.NewChain(chainRepo, cfg.Rpc)
-	tokenSevice := service.NewToken(tokenRepo)
-	balanceService := service.NewBalance(ethClients, *chainService, *tokenSevice)
+	tokenService := service.NewToken(tokenRepo)
+	balanceService := service.NewBalance(ethClients, chainService, tokenService)
 
 	authHandler := handler.NewAuthApi(authService)
 	userHandler := handler.NewUserApi(chainService, balanceService)

@@ -15,11 +15,11 @@ import (
 
 type Balance struct {
 	ethClients   map[string]*ethclient.Client
-	chainService Chain
-	tokenService Token
+	chainService *Chain
+	tokenService *Token
 }
 
-func NewBalance(ethClients map[string]*ethclient.Client, chainService Chain, tokenService Token) *Balance {
+func NewBalance(ethClients map[string]*ethclient.Client, chainService *Chain, tokenService *Token) *Balance {
 	return &Balance{
 		ethClients:   ethClients,
 		chainService: chainService,
@@ -64,29 +64,26 @@ func (s *Balance) CoinBalance(ctx context.Context, address string) ([]*model.Bal
 				return
 			}
 
-			if len(result) >= 2 {
-				balanceBigInt, ok := new(big.Int).SetString(result[2:], 16)
-				if !ok {
-					log.Warn().Msg("Can't parse eth balance")
-					return
-				}
-
-				if balanceBigInt.Cmp(big.NewInt(0)) == 0 {
-					return
-				}
-
-				balancesMutex.Lock()
-				balances = append(balances, &model.Balance{
-					Chain:    chainName,
-					Balance:  balanceBigInt,
-					Name:     coin.Name,
-					Symbol:   coin.Symbol,
-					Decimals: coin.Decimals,
-				})
-				balancesMutex.Unlock()
-			} else {
+			if len(result) < 2 {
 				log.Warn().Msg("Received unexpectedly short balance string")
+				return
 			}
+
+			balanceBigInt, ok := new(big.Int).SetString(result[2:], 16)
+			if !ok || balanceBigInt.Cmp(big.NewInt(0)) == 0 {
+				log.Warn().Msg("Can't parse eth balance or balance is zero")
+				return
+			}
+
+			balancesMutex.Lock()
+			balances = append(balances, &model.Balance{
+				Chain:    chainName,
+				Balance:  balanceBigInt,
+				Name:     coin.Name,
+				Symbol:   coin.Symbol,
+				Decimals: coin.Decimals,
+			})
+			balancesMutex.Unlock()
 		}(client)
 	}
 
@@ -151,30 +148,31 @@ func (s *Balance) TokenBalance(ctx context.Context, address string) ([]*model.Ba
 					continue
 				}
 
-				result := elem.Result.(*string)
-				if len(*result) >= 2 {
-					balanceBigInt, ok := new(big.Int).SetString((*result)[2:], 16)
-					if !ok {
-						log.Warn().Msg("Can't parse balanceBigInt")
-						continue
-					}
-
-					if balanceBigInt.Cmp(big.NewInt(0)) == 0 {
-						continue
-					}
-
-					balancesMutex.Lock()
-					balances = append(balances, &model.Balance{
-						Chain:    chainName,
-						Balance:  balanceBigInt,
-						Name:     tokens[i].Name,
-						Symbol:   tokens[i].Symbol,
-						Decimals: tokens[i].Decimals,
-					})
-					balancesMutex.Unlock()
-				} else {
-					log.Warn().Msg("Received unexpectedly short balance string")
+				result, ok := elem.Result.(string)
+				if !ok || len(result) < 2 {
+					log.Warn().Msg("Invalid result type or length")
+					continue
 				}
+
+				balanceBigInt, ok := new(big.Int).SetString(result[2:], 16)
+				if !ok {
+					log.Warn().Msg("Can't parse balanceBigInt")
+					continue
+				}
+
+				if balanceBigInt.Cmp(big.NewInt(0)) == 0 {
+					continue
+				}
+
+				balancesMutex.Lock()
+				balances = append(balances, &model.Balance{
+					Chain:    chainName,
+					Balance:  balanceBigInt,
+					Name:     tokens[i].Name,
+					Symbol:   tokens[i].Symbol,
+					Decimals: tokens[i].Decimals,
+				})
+				balancesMutex.Unlock()
 			}
 		}(client)
 	}
