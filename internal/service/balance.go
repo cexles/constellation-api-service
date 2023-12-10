@@ -124,6 +124,10 @@ func (s *Balance) TokenBalance(ctx context.Context, address string) ([]*model.Ba
 				return
 			}
 
+			if len(tokens) == 0 {
+				return
+			}
+
 			batchElems := make([]rpc.BatchElem, len(tokens))
 
 			for i, token := range tokens {
@@ -148,10 +152,10 @@ func (s *Balance) TokenBalance(ctx context.Context, address string) ([]*model.Ba
 					continue
 				}
 
-				result, ok := elem.Result.(string)
-				if !ok || len(result) < 2 {
-					log.Warn().Msg("Invalid result type or length")
-					continue
+				var result string
+
+				if ptrResult, isPointer := elem.Result.(*string); isPointer {
+					result = *ptrResult
 				}
 
 				balanceBigInt, ok := new(big.Int).SetString(result[2:], 16)

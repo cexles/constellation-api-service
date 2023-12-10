@@ -33,7 +33,7 @@ func NewFiber(ctx context.Context, jwtCfg *config.Jwt, authHandler *handler.Auth
 
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
-		AllowHeaders: "Origin, Content-Type, Accept",
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 	}))
 
 	app.Use(compress.New(compress.Config{
