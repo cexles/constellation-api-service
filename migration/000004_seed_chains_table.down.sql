@@ -1,0 +1,1 @@
+DELETE FROM chains WHERE chain_id IN (11155111, 80001);
